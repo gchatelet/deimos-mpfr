@@ -16,8 +16,8 @@ struct Mpfr {
         mpfr = new_mpfr;
     }
 
-    this(T)(const T value, mpfr_prec_t precision = 32) if(isNumeric!T) {
-        mpfr_init2(mpfr, precision);
+    this(T)(const T value, mpfr_prec_t p = 32) if(isNumeric!T) {
+        mpfr_init2(mpfr, p);
         this = value;
     }
 
@@ -41,6 +41,18 @@ struct Mpfr {
         } else {
             static assert(false, "Unhandled type " ~ T.stringof);
         }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // properties
+    ////////////////////////////////////////////////////////////////////////////
+
+    @property void precision(mpfr_prec_t p) {
+        mpfr_set_prec(mpfr, p);
+    }
+
+    @property mpfr_prec_t precision() const {
+        return mpfr_get_prec(mpfr);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -110,14 +122,14 @@ struct Mpfr {
     ////////////////////////////////////////////////////////////////////////////
 
     Mpfr opBinary(string op, T)(const T value) const if(isNumericValue!T) {
-        auto output = Mpfr(0);
+        auto output = Mpfr(0, mpfr_get_prec(mpfr));
         mixin(getFunction!(op, T, false)() ~ "(output, mpfr, value, mpfr_rnd_t.MPFR_RNDN);");
         return output;
     }
 
     Mpfr opBinaryRight(string op, T)(const T value) const if(isNumericValue!T) {
         static if(op == "-" || op == "/" || op == "<<" || op == ">>") {
-            auto output = Mpfr(0);
+            auto output = Mpfr(0, mpfr_get_prec(mpfr));
             mixin(getFunction!(op, T, true)() ~ "(output, value, mpfr, mpfr_rnd_t.MPFR_RNDN);");
             return output;
         } else {
@@ -126,7 +138,7 @@ struct Mpfr {
     }
 
     Mpfr opUnary(string op)() const if(op == "-") {
-        auto output = Mpfr(0);
+        auto output = Mpfr(0, mpfr_get_prec(mpfr));
         mpfr_neg(output, mpfr, mpfr_rnd_t.MPFR_RNDN);
         return output;
     }
@@ -290,4 +302,13 @@ unittest {
         value = 16;
         assert(value >> T(3) == 2);
     }
+}
+
+unittest {
+    // precision
+    auto value = Mpfr(0);
+    assert(value.precision == 32);
+    value.precision = 128;
+    assert(value.precision == 128);
+    assert((value + 1).precision == 128);
 }

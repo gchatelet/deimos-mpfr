@@ -48,7 +48,7 @@ void mpfr_init (ref mpfr_t x);
 void mpfr_set_default_prec (mpfr_prec_t prec);
 mpfr_prec_t mpfr_get_default_prec ();
 void mpfr_set_prec (ref mpfr_t x, mpfr_prec_t prec);
-mpfr_prec_t mpfr_get_prec (ref mpfr_t x);
+mpfr_prec_t mpfr_get_prec (ref const mpfr_t x);
 
 // Assignment Functions
 
